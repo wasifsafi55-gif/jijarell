@@ -1,0 +1,230 @@
+{
+  "entities": {
+    "Product": {
+      "title": "Product",
+      "description": "A luxury product sold in the store",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "slug": { "type": "string" },
+        "sku": { "type": "string" },
+        "description": { "type": "string" },
+        "price": { "type": "number" },
+        "sale_price": { "type": "number" },
+        "stock": { "type": "number" },
+        "featured": { "type": "boolean" },
+        "is_active": { "type": "boolean" },
+        "category_id": { "type": "string" },
+        "brand": { "type": "string" },
+        "images": { "type": "array" },
+        "type3d": { "type": "string", "enum": ["watch", "shoe", "bag"] },
+        "variants": { "type": "array" },
+        "rating": { "type": "number" },
+        "reviewsCount": { "type": "number" }
+      },
+      "required": ["id", "name", "slug", "sku", "price", "stock", "category_id", "brand", "type3d"]
+    },
+    "Category": {
+      "title": "Category",
+      "description": "Product category",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "slug": { "type": "string" },
+        "icon": { "type": "string" },
+        "image": { "type": "string" }
+      },
+      "required": ["id", "name", "slug"]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "A customer order",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "user_id": { "type": "string" },
+        "customer_email": { "type": "string" },
+        "customer_name": { "type": "string" },
+        "customer_phone": { "type": "string" },
+        "customer_address": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "confirmed", "processing", "shipped", "delivered", "cancelled"] },
+        "subtotal": { "type": "number" },
+        "discount": { "type": "number" },
+        "shipping": { "type": "number" },
+        "total": { "type": "number" },
+        "payment_status": { "type": "string", "enum": ["paid", "unpaid", "pending_verification"] },
+        "payment_method": { "type": "string", "enum": ["bkash", "whatsapp"] },
+        "transaction_id": { "type": "string" },
+        "proof_image": { "type": "string" },
+        "items": { "type": "array" },
+        "created_at": { "type": "string" },
+        "delivered_at": { "type": "string" }
+      },
+      "required": ["id", "customer_name", "customer_phone", "customer_address", "status", "total", "items", "created_at"]
+    },
+    "Coupon": {
+      "title": "Coupon",
+      "description": "Discount coupon code",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "code": { "type": "string" },
+        "discount_type": { "type": "string", "enum": ["percentage", "fixed"] },
+        "discount_value": { "type": "number" },
+        "start_date": { "type": "string" },
+        "end_date": { "type": "string" }
+      },
+      "required": ["id", "code", "discount_type", "discount_value"]
+    },
+    "Review": {
+      "title": "Review",
+      "description": "Product purchase review",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "product_id": { "type": "string" },
+        "order_id": { "type": "string" },
+        "customer_phone": { "type": "string" },
+        "user_name": { "type": "string" },
+        "rating": { "type": "number" },
+        "review": { "type": "string" },
+        "created_at": { "type": "string" },
+        "admin_reply": { "type": "string" },
+        "admin_reply_at": { "type": "string" }
+      },
+      "required": ["id", "product_id", "rating"]
+    },
+    "Blog": {
+      "title": "Blog",
+      "description": "Luxury Journal article post",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "slug": { "type": "string" },
+        "content": { "type": "string" },
+        "image": { "type": "string" },
+        "seo_title": { "type": "string" },
+        "seo_description": { "type": "string" },
+        "created_at": { "type": "string" }
+      },
+      "required": ["id", "title", "slug", "content"]
+    },
+    "User": {
+      "title": "User",
+      "description": "Customer account",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "email": { "type": "string" },
+        "name": { "type": "string" },
+        "avatar": { "type": "string" },
+        "wishlist": { "type": "array" },
+        "created_at": { "type": "string" },
+        "customer_phone": { "type": "string" },
+        "customer_address": { "type": "string" }
+      },
+      "required": ["id", "email"]
+    },
+    "Banner": {
+      "title": "Banner",
+      "description": "Promotional banner slide",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "image": { "type": "string" },
+        "title": { "type": "string" },
+        "subtitle": { "type": "string" },
+        "button_text": { "type": "string" },
+        "destination_url": { "type": "string" },
+        "start_date": { "type": "string" },
+        "end_date": { "type": "string" },
+        "is_active": { "type": "boolean" },
+        "click_action": { "type": "string" }
+      },
+      "required": ["id", "image"]
+    },
+    "Notification": {
+      "title": "Notification",
+      "description": "Global or targeted purchase notifications",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "type": { "type": "string" },
+        "title": { "type": "string" },
+        "title_bn": { "type": "string" },
+        "body": { "type": "string" },
+        "body_bn": { "type": "string" },
+        "link": { "type": "string" },
+        "is_global": { "type": "boolean" },
+        "customer_phone": { "type": "string" },
+        "created_at": { "type": "string" }
+      },
+      "required": ["id", "type", "title", "body", "is_global", "created_at"]
+    },
+    "Email": {
+      "title": "Email",
+      "description": "Simulated or sent notification dispatch record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "to": { "type": "string" },
+        "subject": { "type": "string" },
+        "bodyHtml": { "type": "string" },
+        "customer_phone": { "type": "string" },
+        "created_at": { "type": "string" }
+      },
+      "required": ["id", "to", "subject", "bodyHtml", "created_at"]
+    },
+    "AuditLog": {
+      "title": "AuditLog",
+      "description": "Administrative track auditable logging",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "action": { "type": "string" },
+        "details": { "type": "string" },
+        "timestamp": { "type": "string" },
+        "ip": { "type": "string" },
+        "browser": { "type": "string" }
+      },
+      "required": ["id", "action", "details", "timestamp"]
+    },
+    "Settings": {
+      "title": "Settings",
+      "description": "Global corporate and shop settings",
+      "type": "object",
+      "properties": {
+        "whatsapp_number": { "type": "string" },
+        "bkash_number": { "type": "string" },
+        "announcement_text": { "type": "string" },
+        "promo_text": { "type": "string" },
+        "promo_countdown_end": { "type": "string" },
+        "language": { "type": "string" },
+        "admin_password": { "type": "string" },
+        "corporate_address": { "type": "string" },
+        "corporate_email": { "type": "string" },
+        "whatsapp_link": { "type": "string" },
+        "instagram_link": { "type": "string" },
+        "facebook_link": { "type": "string" },
+        "delivery_contact_number": { "type": "string" }
+      }
+    }
+  },
+  "firestore": {
+    "products": { "schema": "Product", "description": "Catalog products" },
+    "categories": { "schema": "Category", "description": "Product categories list" },
+    "orders": { "schema": "Order", "description": "Customer placement orders" },
+    "coupons": { "schema": "Coupon", "description": "Active coupon codes" },
+    "reviews": { "schema": "Review", "description": "Catalog reviews" },
+    "blogs": { "schema": "Blog", "description": "Journals and luxury content blogs" },
+    "users": { "schema": "User", "description": "Registered customer profiles" },
+    "banners": { "schema": "Banner", "description": "Homepage banners list" },
+    "notifications": { "schema": "Notification", "description": "Live and stored notifications" },
+    "emails": { "schema": "Email", "description": "History of dispatched emails" },
+    "audit_logs": { "schema": "AuditLog", "description": "Administrative audit logs tracker" },
+    "settings": { "schema": "Settings", "description": "Store settings singleton document" }
+  }
+}

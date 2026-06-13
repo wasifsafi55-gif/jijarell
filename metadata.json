@@ -1,0 +1,11 @@
+{
+  "name": "JIJARELL",
+  "description": "Premium Luxury 3D Marketplace Platform featuring interactive Three.js 3D renderers, Dual-Language (English & Bangla) localizers, secure checkout, live AI Support with Search Grounding, and bKash/WhatsApp payment strategies.",
+  "requestFramePermissions": [
+    "geolocation",
+    "microphone"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

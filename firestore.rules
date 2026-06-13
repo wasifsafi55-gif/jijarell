@@ -1,0 +1,148 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 1. Global Safety Net: Default Deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // 2. Global Helpers / Primitives
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // Bootstrapped Admin from runtime (wasifsafi55@gmail.com)
+    function isAdmin() {
+      return isSignedIn() && (
+        request.auth.token.email == 'wasifsafi55@gmail.com' || 
+        request.auth.token.email == 'wasifjafarsafi.edu@gmail.com' ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // Backend Token Authentication Validation Helpers
+    function isRequestBackend() {
+      return request.resource != null && 
+             request.resource.data != null && 
+             '_sys_token' in request.resource.data && 
+             request.resource.data._sys_token == 'JIJARELL_SYSTEM_SECURE_TOKEN_2026';
+    }
+
+    function isResourceBackend() {
+      return resource != null && 
+             resource.data != null && 
+             '_sys_token' in resource.data && 
+             resource.data._sys_token == 'JIJARELL_SYSTEM_SECURE_TOKEN_2026';
+    }
+
+    // Entity validator logic helpers
+    function isValidProduct(data) {
+      return data.id is string && data.id.size() <= 128 &&
+             data.name is string && data.name.size() <= 200 &&
+             data.price is number && data.price >= 0;
+    }
+
+    // Entity validation rules (keeping size boundaries safe)
+    function isValidOrder(data) {
+      return data.id is string && data.id.size() <= 128 &&
+             data.customer_name is string && data.customer_name.size() <= 200 &&
+             data.customer_phone is string && data.customer_phone.size() <= 50;
+    }
+
+    // 4. Collection Matches
+    match /products/{productId} {
+      allow read: if true;
+      allow create: if isRequestBackend();
+      allow update: if isRequestBackend() || isAdmin();
+      allow delete: if isResourceBackend() || isAdmin();
+    }
+
+    match /categories/{categoryId} {
+      allow read: if true;
+      allow create: if isRequestBackend();
+      allow update: if isRequestBackend() || isAdmin();
+      allow delete: if isResourceBackend() || isAdmin();
+    }
+
+    match /orders/{orderId} {
+      allow read: if true; // API server reads all, client-side reads rely on query trust
+      allow create: if isRequestBackend() || isValidOrder(incoming());
+      allow update: if isRequestBackend() || isAdmin() || (isSignedIn() && existing().user_id == request.auth.uid);
+      allow delete: if isResourceBackend() || isAdmin();
+    }
+
+    match /coupons/{couponId} {
+      allow read: if true;
+      allow create: if isRequestBackend();
+      allow update: if isRequestBackend() || isAdmin();
+      allow delete: if isResourceBackend() || isAdmin();
+    }
+
+    match /reviews/{reviewId} {
+      allow read: if true;
+      allow create: if isRequestBackend() || true;
+      allow update: if isRequestBackend() || isAdmin();
+      allow delete: if isResourceBackend() || isAdmin();
+    }
+
+    match /blogs/{blogId} {
+      allow read: if true;
+      allow create: if isRequestBackend();
+      allow update: if isRequestBackend() || isAdmin();
+      allow delete: if isResourceBackend() || isAdmin();
+    }
+
+    match /users/{userId} {
+      allow read: if true;
+      allow create: if isRequestBackend() || true;
+      allow update: if isRequestBackend() || true;
+      allow delete: if isResourceBackend() || isAdmin();
+    }
+
+    match /banners/{bannerId} {
+      allow read: if true;
+      allow create: if isRequestBackend();
+      allow update: if isRequestBackend() || isAdmin();
+      allow delete: if isResourceBackend() || isAdmin();
+    }
+
+    match /notifications/{notificationId} {
+      allow read: if true;
+      allow create: if isRequestBackend();
+      allow update: if isRequestBackend() || isAdmin();
+      allow delete: if isResourceBackend() || isAdmin();
+    }
+
+    match /emails/{emailId} {
+      allow read: if true;
+      allow create: if isRequestBackend();
+      allow update: if isRequestBackend() || isAdmin();
+      allow delete: if isResourceBackend() || isAdmin();
+    }
+
+    match /audit_logs/{logId} {
+      allow read: if true;
+      allow create, update: if isRequestBackend() || isAdmin() || true;
+      allow delete: if isResourceBackend() || isAdmin();
+    }
+
+    match /settings/{settingsId} {
+      allow read: if true;
+      allow create: if isRequestBackend();
+      allow update: if isRequestBackend() || isAdmin();
+      allow delete: if isResourceBackend() || isAdmin();
+    }
+  }
+}
