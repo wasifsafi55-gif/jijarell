@@ -488,9 +488,6 @@ async function saveToFirestore(data: BackendDB) {
 
   } catch (error) {
     console.error('[Firestore] saveToFirestore error:', error);
-  } catch (error) {
-    console.error("[Firestore] syncFromFirestore error:", error);
-    return SEED_DATA;
   }
 }
 
@@ -512,17 +509,6 @@ async function syncFromFirestore(): Promise<BackendDB> {
   };
 
   try {
-  } catch (error) {
-    console.error("[Firestore] syncFromFirestore error:", error);
-    return SEED_DATA;
-  } catch (error) {
-    console.error("[Firestore] syncFromFirestore error:", error);
-    return SEED_DATA;
-  }
-  } catch (error) {
-    console.error("[Firestore] syncFromFirestore error:", error);
-    return SEED_DATA;
-  }
     // 1. Load Settings
     const settingsDoc = await getDoc(doc(db, 'settings', 'store_settings'));
     if (settingsDoc.exists()) {
@@ -543,6 +529,7 @@ async function syncFromFirestore(): Promise<BackendDB> {
     console.error('[Firestore] syncFromFirestore general error:', error);
     return SEED_DATA;
   }
+}
 
 // Synchronous wrapper to update Firestore asynchronously
 function saveDB(data: BackendDB) {
@@ -772,9 +759,6 @@ app.post('/api/customer/auth/send-otp', async (req, res) => {
       dev_otp: otp,
       warning: 'Live sandbox active.'
     });
-  } catch (error) {
-    console.error("[Firestore] syncFromFirestore error:", error);
-    return SEED_DATA;
   }
 });
 
@@ -891,9 +875,6 @@ app.post('/api/customer/auth/google', async (req, res) => {
   } catch (err: any) {
     console.error('Google Auth validation error:', err);
     res.status(500).json({ error: 'Google authentication error: ' + err.message });
-  } catch (error) {
-    console.error("[Firestore] syncFromFirestore error:", error);
-    return SEED_DATA;
   }
 });
 
@@ -1086,9 +1067,6 @@ app.post('/api/admin/send-pw-otp', async (req, res) => {
       dev_otp2: otp2,
       warning: 'Sandbox credential bypass active.'
     });
-  } catch (error) {
-    console.error("[Firestore] syncFromFirestore error:", error);
-    return SEED_DATA;
   }
 });
 
@@ -1935,9 +1913,6 @@ Only output the JSON object structure.`;
     };
     await redis.setex(cacheKey, 300, JSON.stringify(fallbackObj)); // cache fallback too for 5 mins
     res.json(fallbackObj);
-  } catch (error) {
-    console.error("[Firestore] syncFromFirestore error:", error);
-    return SEED_DATA;
   }
 });
 
@@ -2285,9 +2260,6 @@ If you need any active rerouting, delivery delay check, or secure cancellation, 
     app.get("*", (req, res) => {
       res.sendFile(path.join(distPath, "index.html"));
     });
-  } catch (error) {
-    console.error("[Firestore] syncFromFirestore error:", error);
-    return SEED_DATA;
   }
     // Graceful error fallback for any other general unhandled issues without leakage
     console.error('Core Chat API Error:', err);
@@ -2338,6 +2310,30 @@ async function startServer() {
     });
   }
 
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server is running at http://0.0.0.0:${PORT}`);
+  });
+}
+
+startServer().catch(err => {
+  console.error("Failed to start server on boot:", err);
+});
+
+// Serve frontend assets
+async function startServer() {
+  console.log("[Boot] Synchronizing memory cache with live Firestore...");
+  currentDB = await syncFromFirestore();
+  console.log("[Boot] Firestore sync complete!");
+
+  // Production Mode - Serve prebuilt assets
+  const distPath = path.join(__dirname, "dist");
+  console.log("Serving static from:", distPath);
+  app.use(express.static(distPath));
+  app.get("*", (req, res) => {
+    res.sendFile(path.join(distPath, "index.html"));
+  });
+
+  const PORT = process.env.PORT || 3000;
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server is running at http://0.0.0.0:${PORT}`);
   });
