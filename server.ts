@@ -79,7 +79,7 @@ const resolvedDirname = typeof __dirname !== 'undefined' ? __dirname : path.dirn
 const app = express();
 app.use(express.json());
 
-const PORT = 3000;
+const PORT = process.env.PORT || 8080;
 
 // JSON DB Persistence setup
 const DB_FILE = path.join(process.cwd(), 'db.json');
