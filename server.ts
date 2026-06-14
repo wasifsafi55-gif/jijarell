@@ -517,15 +517,8 @@ async function syncFromFirestore(): Promise<BackendDB> {
       delete settingsData._sys_token;
       newDB.settings = settingsData;
       docHashCache.set('settings:store_settings', rawSettingsStr);
-  } else {
-    // Production Mode - Serve prebuilt assets
-    const distPath = path.join(__dirname, "dist");
-    console.log("Serving static from:", distPath);
-    app.use(express.static(distPath));
-    app.get("*", (req, res) => {
-      res.sendFile(path.join(distPath, "index.html"));
-    });
-  }
+    }
+  } catch (error) {
     console.error('[Firestore] syncFromFirestore general error:', error);
     return SEED_DATA;
   }
@@ -2252,15 +2245,8 @@ If you need any active rerouting, delivery delay check, or secure cancellation, 
   - **সরাসরি ফোন ও বিকাশ হেল্পলাইন:** **${currentDB.settings.bkash_number}**
   - **অফিশিয়াল সাপোর্ট মেইল:** **${currentDB.settings.corporate_email}**
   - **লজিস্টিকস ও পরিবর্তন সহায়তা:** **${currentDB.settings.delivery_contact_number}**`;
-  } else {
-    // Production Mode - Serve prebuilt assets
-    const distPath = path.join(__dirname, "dist");
-    console.log("Serving static from:", distPath);
-    app.use(express.static(distPath));
-    app.get("*", (req, res) => {
-      res.sendFile(path.join(distPath, "index.html"));
-    });
-  }
+      }
+  } catch (err: any) {
     // Graceful error fallback for any other general unhandled issues without leakage
     console.error('Core Chat API Error:', err);
     res.json({
