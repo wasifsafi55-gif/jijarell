@@ -517,216 +517,15 @@ async function syncFromFirestore(): Promise<BackendDB> {
       delete settingsData._sys_token;
       newDB.settings = settingsData;
       docHashCache.set('settings:store_settings', rawSettingsStr);
-    } else {
-      newDB.settings = SEED_DATA.settings;
-      const settingsToSave = { ...SEED_DATA.settings, _sys_token: FIRESTORE_SYSTEM_TOKEN };
-      await setDoc(doc(db, 'settings', 'store_settings'), settingsToSave);
-      docHashCache.set('settings:store_settings', JSON.stringify(settingsToSave));
-    }
-
-    // 2. Helper to load collection
-    const loadCollection = async (colName: string) => {
-      const qSnap = await getDocs(collection(db, colName));
-      const items: any[] = [];
-      const currentIds = new Set<string>();
-      qSnap.forEach(docSnap => {
-        const docId = docSnap.id;
-        const itemData = docSnap.data();
-        const rawItemStr = JSON.stringify(itemData);
-        delete itemData._sys_token; // Remove backend system token before caching
-        const fullItem = { id: docId, ...itemData };
-        items.push(fullItem);
-        currentIds.add(docId);
-        docHashCache.set(`${colName}:${docId}`, rawItemStr);
-      });
-      collectionKeysCache.set(colName, currentIds);
-      return items;
-    };
-
-    // Load each collection. If empty on Firestore, seed it with SEED_DATA!
-    const productsList = await loadCollection('products');
-    if (productsList.length > 0) {
-      newDB.products = productsList as BackendProduct[];
-    } else {
-      newDB.products = SEED_DATA.products;
-      for (const item of SEED_DATA.products) {
-        await setDoc(doc(db, 'products', item.id), { ...item, _sys_token: FIRESTORE_SYSTEM_TOKEN });
-        docHashCache.set(`products:${item.id}`, JSON.stringify(item));
-      }
-      collectionKeysCache.set('products', new Set(SEED_DATA.products.map(p => p.id)));
-    }
-
-    const categoriesList = await loadCollection('categories');
-    if (categoriesList.length > 0) {
-      newDB.categories = categoriesList;
-    } else {
-      newDB.categories = SEED_DATA.categories;
-      for (const item of SEED_DATA.categories) {
-        await setDoc(doc(db, 'categories', item.id), { ...item, _sys_token: FIRESTORE_SYSTEM_TOKEN });
-        docHashCache.set(`categories:${item.id}`, JSON.stringify(item));
-      }
-      collectionKeysCache.set('categories', new Set(SEED_DATA.categories.map(c => c.id)));
-    }
-
-    const ordersList = await loadCollection('orders');
-    if (ordersList.length > 0) {
-      newDB.orders = ordersList as BackendOrder[];
-    } else {
-      newDB.orders = SEED_DATA.orders;
-      for (const item of SEED_DATA.orders) {
-        await setDoc(doc(db, 'orders', item.id), { ...item, _sys_token: FIRESTORE_SYSTEM_TOKEN });
-        docHashCache.set(`orders:${item.id}`, JSON.stringify(item));
-      }
-      collectionKeysCache.set('orders', new Set(SEED_DATA.orders.map(o => o.id)));
-    }
-
-    const couponsList = await loadCollection('coupons');
-    if (couponsList.length > 0) {
-      newDB.coupons = couponsList;
-    } else {
-      newDB.coupons = SEED_DATA.coupons;
-      for (const item of SEED_DATA.coupons) {
-        await setDoc(doc(db, 'coupons', item.id), { ...item, _sys_token: FIRESTORE_SYSTEM_TOKEN });
-        docHashCache.set(`coupons:${item.id}`, JSON.stringify(item));
-      }
-      collectionKeysCache.set('coupons', new Set(SEED_DATA.coupons.map(c => c.id)));
-    }
-
-    const reviewsList = await loadCollection('reviews');
-    if (reviewsList.length > 0) {
-      newDB.reviews = reviewsList;
-    } else {
-      newDB.reviews = SEED_DATA.reviews;
-      for (const item of SEED_DATA.reviews) {
-        await setDoc(doc(db, 'reviews', item.id), { ...item, _sys_token: FIRESTORE_SYSTEM_TOKEN });
-        docHashCache.set(`reviews:${item.id}`, JSON.stringify(item));
-      }
-      collectionKeysCache.set('reviews', new Set(SEED_DATA.reviews.map(r => r.id)));
-    }
-
-    const blogsList = await loadCollection('blogs');
-    if (blogsList.length > 0) {
-      newDB.blogs = blogsList;
-    } else {
-      newDB.blogs = SEED_DATA.blogs;
-      for (const item of SEED_DATA.blogs) {
-        await setDoc(doc(db, 'blogs', item.id), { ...item, _sys_token: FIRESTORE_SYSTEM_TOKEN });
-        docHashCache.set(`blogs:${item.id}`, JSON.stringify(item));
-      }
-      collectionKeysCache.set('blogs', new Set(SEED_DATA.blogs.map(b => b.id)));
-    }
-
-    newDB.users = await loadCollection('users');
-
-    const bannersList = await loadCollection('banners');
-    if (bannersList.length > 0) {
-      newDB.banners = bannersList;
-    } else {
-      const defaultBanners = SEED_DATA.banners || [];
-      newDB.banners = defaultBanners;
-      for (const item of defaultBanners) {
-        await setDoc(doc(db, 'banners', item.id), { ...item, _sys_token: FIRESTORE_SYSTEM_TOKEN });
-        docHashCache.set(`banners:${item.id}`, JSON.stringify(item));
-      }
-      collectionKeysCache.set('banners', new Set(defaultBanners.map(b => b.id)));
-    }
-
-    const notificationsList = await loadCollection('notifications');
-    if (notificationsList.length > 0) {
-      newDB.notifications = notificationsList as BackendNotification[];
-    } else {
-      const defaultNotifications = [
-        {
-          id: "not-1",
-          type: "promotion",
-          title: "Grand Luxury Campaign",
-          title_bn: "গ্র্যান্ড লাক্সারি প্রমোশন",
-          body: "Acquire master horology or fine leather: Use coupon code 'JIJARELL10' at checkout today for 10% off your entire bag or watch cart!",
-          body_bn: "অর্ডার করুন অভিজাত ঘড়ি বা লাক্সারি জুতো: আজই চেকআউটে 'JIJARELL10' কুপন ব্যবহার করে পেয়ে যান ১০% পর্যন্ত সরাসরি ডিসকাউন্ট!",
-          link: "coup-1",
-          is_global: true,
-          created_at: new Date(Date.now() - 3600000 * 3).toISOString()
-        },
-        {
-          id: "not-2",
-          type: "flash_sale",
-          title: "Limited Eid Flash Discount",
-          title_bn: "সীমিত সময়ের ঈদ ফ্ল্যাশ সেল",
-          body: "⚡ Flash Offer Activated: Enter code 'LUXURY5000' during purchase checkout for an instant 5,000 BDT price drop!",
-          body_bn: "⚡ দারুণ ডাবল ফ্ল্যাশ ডিসকাউন্ট: এখনই চেকআউটে 'LUXURY5000' কোড ব্যবহার করে লুফে নিন ৫,০০০ টাকা ফ্ল্যাট ছাড়!",
-          link: "coup-2",
-          is_global: true,
-          created_at: new Date(Date.now() - 3600000 * 2).toISOString()
-        },
-        {
-          id: "not-3",
-          type: "announcement",
-          title: "Interactive 3D Virtual Shop Floor Active",
-          title_bn: "ইন্টারেক্টিভ থ্রিডি থ্রি-ভিউয়ার এখন সচল",
-          body: "Examine our limited pieces from all strategic dimensions inside our real-time interactive 3D WebGL viewer.",
-          body_bn: "আমাদের সব এক্সক্লুসিভ লাক্সারি পণ্যগুলো ঘুরে ঘুরে দেখুন পুরো ৩৬০ ডিগ্রি ইন্টারেক্টিভ থ্রিডি ভিউয়ারে।",
-          is_global: true,
-          created_at: new Date(Date.now() - 3600000 * 12).toISOString()
-        }
-      ];
-      newDB.notifications = defaultNotifications as BackendNotification[];
-      for (const item of defaultNotifications) {
-        await setDoc(doc(db, 'notifications', item.id), { ...item, _sys_token: FIRESTORE_SYSTEM_TOKEN });
-        docHashCache.set(`notifications:${item.id}`, JSON.stringify(item));
-      }
-      collectionKeysCache.set('notifications', new Set(defaultNotifications.map(n => n.id)));
-    }
-
-    newDB.emails = (await loadCollection('emails')) as BackendEmail[];
-    newDB.audit_logs = await loadCollection('audit_logs');
-
-    // Make sure we carry out the standard default checks & corrections on settings
-    if (!newDB.settings) {
-      newDB.settings = SEED_DATA.settings;
-    }
-    if (!newDB.settings.corporate_address) {
-      newDB.settings.corporate_address = "Paschim Sholosahar, Chattogram, Chattogram Division, 4211, Bangladesh";
-    }
-    if (!newDB.settings.corporate_email) {
-      newDB.settings.corporate_email = "jijarell.official@gmail.com";
-    }
-    if (!newDB.settings.whatsapp_link) {
-      newDB.settings.whatsapp_link = "https://wa.me/8801410624199";
-    }
-    if (!newDB.settings.whatsapp_number || newDB.settings.whatsapp_number === "8801712345678") {
-      newDB.settings.whatsapp_number = "8801410624199";
-    }
-    if (!newDB.settings.instagram_link) {
-      newDB.settings.instagram_link = "https://www.instagram.com/jijarell?igsh=NjA4MWhmbHlpZmpj";
-    }
-    if (!newDB.settings.facebook_link) {
-      newDB.settings.facebook_link = "https://www.facebook.com/share/18pNmHSeMr";
-    }
-    if (!newDB.settings.bkash_number || newDB.settings.bkash_number === "01712345678") {
-      newDB.settings.bkash_number = "01410625199";
-    }
-    if (!newDB.settings.delivery_contact_number) {
-      newDB.settings.delivery_contact_number = "01410625199";
-    }
-    if (!(newDB.settings as any).admin_password) {
-      (newDB.settings as any).admin_password = 'wasif1234';
-    }
-    if (!newDB.audit_logs || newDB.audit_logs.length === 0) {
-      newDB.audit_logs = [
-        {
-          id: "log-init",
-          action: "System Initialized",
-          details: "JIJARELL Genève Central auditing node active. Core parameters locked via Firestore.",
-          timestamp: new Date().toISOString(),
-          ip: "127.0.0.1",
-          browser: "System Core"
-        }
-      ];
-    }
-
-    console.log('[Firestore] Live database sync completed successfully.');
-    return newDB;
-  } catch (error) {
+  } else {
+    // Production Mode - Serve prebuilt assets
+    const distPath = path.join(__dirname, "dist");
+    console.log("Serving static from:", distPath);
+    app.use(express.static(distPath));
+    app.get("*", (req, res) => {
+      res.sendFile(path.join(distPath, "index.html"));
+    });
+  }
     console.error('[Firestore] syncFromFirestore general error:', error);
     return SEED_DATA;
   }
@@ -906,8 +705,13 @@ app.post('/api/admin/login', (req, res) => {
     logAdminAction('Terminal Login Success', `Authorized session granted to administrative operator (Role: ${role || 'administrator'})`, req);
     res.json({ success: true, token: sessionToken, role: role || 'admin' });
   } else {
-    logAdminAction('Terminal Login Refused', `Intrusion block: unauthorized attempt in terminal password lock. Key provided: "${password || 'empty'}"`, req);
-    res.status(401).json({ error: 'Access Denied: Invalid Administrative credentials.' });
+    // Production Mode - Serve prebuilt assets
+    const distPath = path.join(__dirname, "dist");
+    console.log("Serving static from:", distPath);
+    app.use(express.static(distPath));
+    app.get("*", (req, res) => {
+      res.sendFile(path.join(distPath, "index.html"));
+    });
   }
 });
 
@@ -1108,7 +912,13 @@ app.post('/api/customer/wishlist/toggle', (req, res) => {
   if (idx > -1) {
     user.wishlist.splice(idx, 1);
   } else {
-    user.wishlist.push(productId);
+    // Production Mode - Serve prebuilt assets
+    const distPath = path.join(__dirname, "dist");
+    console.log("Serving static from:", distPath);
+    app.use(express.static(distPath));
+    app.get("*", (req, res) => {
+      res.sendFile(path.join(distPath, "index.html"));
+    });
   }
 
   saveDB(currentDB);
@@ -1324,7 +1134,13 @@ app.post('/api/banners', (req, res) => {
   if (idx > -1) {
     currentDB.banners[idx] = { ...currentDB.banners[idx], ...banner };
   } else {
-    currentDB.banners.push(banner);
+    // Production Mode - Serve prebuilt assets
+    const distPath = path.join(__dirname, "dist");
+    console.log("Serving static from:", distPath);
+    app.use(express.static(distPath));
+    app.get("*", (req, res) => {
+      res.sendFile(path.join(distPath, "index.html"));
+    });
   }
   saveDB(currentDB);
   redis.del('redis:banners');
@@ -1379,10 +1195,13 @@ app.post('/api/products', (req, res) => {
   if (existingIdx > -1) {
     currentDB.products[existingIdx] = { ...currentDB.products[existingIdx], ...productData };
   } else {
-    // defaults
-    productData.rating = productData.rating || 5.0;
-    productData.reviewsCount = productData.reviewsCount || 0;
-    currentDB.products.push(productData as BackendProduct);
+    // Production Mode - Serve prebuilt assets
+    const distPath = path.join(__dirname, "dist");
+    console.log("Serving static from:", distPath);
+    app.use(express.static(distPath));
+    app.get("*", (req, res) => {
+      res.sendFile(path.join(distPath, "index.html"));
+    });
   }
   
   saveDB(currentDB);
@@ -1509,7 +1328,13 @@ app.get(['/api/user-orders', '/user-orders'], (req, res) => {
   if (authHeader.startsWith('Bearer ')) {
     token = authHeader.substring(7);
   } else {
-    token = (req.query.token as string) || '';
+    // Production Mode - Serve prebuilt assets
+    const distPath = path.join(__dirname, "dist");
+    console.log("Serving static from:", distPath);
+    app.use(express.static(distPath));
+    app.get("*", (req, res) => {
+      res.sendFile(path.join(distPath, "index.html"));
+    });
   }
   
   if (!token) {
@@ -2427,16 +2252,15 @@ If you need any active rerouting, delivery delay check, or secure cancellation, 
   - **সরাসরি ফোন ও বিকাশ হেল্পলাইন:** **${currentDB.settings.bkash_number}**
   - **অফিশিয়াল সাপোর্ট মেইল:** **${currentDB.settings.corporate_email}**
   - **লজিস্টিকস ও পরিবর্তন সহায়তা:** **${currentDB.settings.delivery_contact_number}**`;
-      } else {
-        responseText = aiResponseText;
-      }
-    }
-
-    res.json({
-      text: responseText,
-      groundingChunks: null
+  } else {
+    // Production Mode - Serve prebuilt assets
+    const distPath = path.join(__dirname, "dist");
+    console.log("Serving static from:", distPath);
+    app.use(express.static(distPath));
+    app.get("*", (req, res) => {
+      res.sendFile(path.join(distPath, "index.html"));
     });
-  } catch (err: any) {
+  }
     // Graceful error fallback for any other general unhandled issues without leakage
     console.error('Core Chat API Error:', err);
     res.json({
@@ -2478,9 +2302,11 @@ async function startServer() {
     });
   } else {
     // Production Mode - Serve prebuilt assets
-    app.use(express.static(path.join(resolvedDirname, 'dist')));
-    app.get('*', (req, res) => {
-      res.sendFile(path.join(resolvedDirname, 'dist', 'index.html'));
+    const distPath = path.join(__dirname, "dist");
+    console.log("Serving static from:", distPath);
+    app.use(express.static(distPath));
+    app.get("*", (req, res) => {
+      res.sendFile(path.join(distPath, "index.html"));
     });
   }
 
